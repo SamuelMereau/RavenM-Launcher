@@ -1,0 +1,88 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:RavenM_Launcher.ViewModels"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:converters="clr-namespace:RavenM_Launcher.Converters"
+        mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+        Width="800"
+        Height="450"
+        WindowStartupLocation="CenterScreen"
+        x:Class="RavenM_Launcher.Views.MainWindow"
+        Icon="/Assets/avalonia-logo.ico"
+        Title="RavenM Lobbies">
+
+    <Design.DataContext>
+        <!-- This only sets the DataContext for the previewer in an IDE,
+             to set the actual DataContext for runtime, set the DataContext property in code (look at App.axaml.cs) -->
+        <vm:MainWindowViewModel/>
+    </Design.DataContext>
+
+	<Grid>
+		<StackPanel IsVisible="{Binding !Loaded}" Margin="0,20,0,0" HorizontalAlignment="Center">
+			<TextBlock Text="Not connected to Steam! Open the Steam app, then close and rerun this app." />
+		</StackPanel>
+		<DataGrid Name="OpenLobbiesList"
+		          Items="{Binding Lobbies, Mode=OneWay}" 
+		          Margin="10" 
+		          IsReadOnly="True" 
+		          AutoGenerateColumns="False" 
+		          CanUserReorderColumns="False"
+		          CanUserSortColumns="False"
+		          SelectionMode="Single"
+		          SelectionChanged="OpenLobbiesList_OnSelectionChanged">
+			<DataGrid.Styles>
+				<Style Selector="DataGridCell Rectangle">
+					<Setter Property="IsVisible" Value="False" />
+				</Style>
+				<Style Selector="DataGridColumnHeader">
+					<Setter Property="Padding" Value="12,0,-24,0" />
+				</Style>
+			</DataGrid.Styles>
+			<DataGrid.Columns>
+				<DataGridTextColumn Header="Host Name" Binding="{Binding HostName}" Width="150" />   
+				<DataGridTextColumn Header="Map" Binding="{Binding Map}" Width="*" />  
+				<DataGridTextColumn Header="Members" Binding="{Binding MemberCount}" Width="80" />
+				<DataGridTextColumn Header="Max" Binding="{Binding MaxMembers}" Width="80" />
+				<DataGridTextColumn Header="Mods" Binding="{Binding ModCount}" Width="70" />
+				<DataGridTextColumn Header="Midjoin" Binding="{Binding MidjoinEnabled}" Width="70" />
+				<DataGridTextColumn Header="Version" Binding="{Binding RavenMVersion}" Width="70" />
+			</DataGrid.Columns>
+		</DataGrid>
+		<Grid VerticalAlignment="Bottom" Margin="20,0,10,0">
+			<Grid.ColumnDefinitions>
+				<ColumnDefinition Width="*" />
+				<ColumnDefinition Width="125" />
+				<ColumnDefinition Width="125" />
+				<ColumnDefinition Width="75" />
+			</Grid.ColumnDefinitions>
+			<TextBlock Grid.Column="0" VerticalAlignment="Top" Text="{Binding LobbyCountText, Mode=OneWay}" />
+			<Button Grid.Column="1" x:Name="Joinlobby" Content="Join Lobby"
+		        Command="{Binding OnJoinLobby}"
+		        Margin="10,0,10,10" 
+		        HorizontalAlignment="Right" 
+		        HorizontalContentAlignment="Center" 
+		        VerticalContentAlignment="Center" 
+		        VerticalAlignment="Top" 
+		        IsEnabled="{Binding LobbySelected}"
+		        Width="125"/>
+			<Button Grid.Column="2" x:Name="Startravenfield" Content="Start Ravenfield"
+	            Command="{Binding OnStartRavenfield}"
+	            Margin="10,0,10,10" 
+	            HorizontalAlignment="Right" 
+	            HorizontalContentAlignment="Center" 
+	            VerticalContentAlignment="Center" 
+	            VerticalAlignment="Top" 
+	            Width="125"/>
+			<Button Grid.Column="3" x:Name="refreshbtn" Content="Refresh"
+		        Command="{Binding OnRefreshLobbies}"
+		        Margin="10,0,10,10" 
+		        HorizontalAlignment="Right" 
+		        HorizontalContentAlignment="Center" 
+		        VerticalContentAlignment="Center" 
+		        VerticalAlignment="Top" 
+		        Width="75" />
+		</Grid>
+	</Grid>
+
+</Window>

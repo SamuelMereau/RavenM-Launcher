@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AvaloniaProject">
+    <option name="projectPerEditor">
+      <map>
+        <entry key="RavenM-Launcher/App.axaml" value="RavenM-Launcher/RavenM-Launcher.csproj" />
+        <entry key="RavenM-Launcher/Views/MainWindow.axaml" value="RavenM-Launcher/RavenM-Launcher.csproj" />
+      </map>
+    </option>
+  </component>
+</project>

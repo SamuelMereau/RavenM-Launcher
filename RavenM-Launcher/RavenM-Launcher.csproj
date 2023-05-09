@@ -1,0 +1,57 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net6.0</TargetFramework>
+	  
+<!--	<RuntimeIdentifier Condition=" '$(Configuration)' == 'Release' ">win-x64</RuntimeIdentifier>-->
+<!--	<PublishSingleFile Condition=" '$(Configuration)' == 'Release' ">true</PublishSingleFile>-->
+<!--    <SelfContained Condition=" '$(Configuration)' == 'Release' ">true</SelfContained>-->
+<!--	<DebugType Condition=" '$(Configuration)' == 'Release' ">embedded</DebugType>-->
+	  
+    <Nullable>enable</Nullable>
+    <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <PublishReadyToRun>true</PublishReadyToRun>
+    <IncludeAllContentForSelfExtract>true</IncludeAllContentForSelfExtract>
+    <PublishTrimmed>false</PublishTrimmed>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Folder Include="Converters" />
+    <Folder Include="Models\" />
+    <AvaloniaResource Include="Assets\**" />
+    <None Remove=".gitignore" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <TrimmerRootDescriptor Include="Roots.xml" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Avalonia" Version="0.10.18" />
+    <PackageReference Include="Avalonia.Controls.DataGrid" Version="0.10.18" />
+    <PackageReference Include="Avalonia.Desktop" Version="0.10.18" />
+    <!--Condition below is needed to remove Avalonia.Diagnostics package from build output in Release configuration.-->
+    <PackageReference Condition="'$(Configuration)' == 'Debug'" Include="Avalonia.Diagnostics" Version="0.10.18" />
+    <PackageReference Include="Avalonia.ReactiveUI" Version="0.10.18" />
+    <PackageReference Include="MessageBox.Avalonia" Version="2.1.0" />
+    <PackageReference Include="XamlNameReferenceGenerator" Version="1.5.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+	<Content Include="runtimes\**">
+		<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		<PackagePath>runtimes</PackagePath>
+	</Content>
+    <Reference Include="Facepunch.Steamworks.Posix" Condition=" '$(OS)' == 'Unix' Or '$(OS)' == 'Linux' ">
+      <HintPath>Plugins\Facepunch.Steamworks.Posix.dll</HintPath>
+    </Reference>
+    <Reference Include="Facepunch.Steamworks.Win64" Condition=" '$(OS)' == 'Windows_NT' ">
+      <HintPath>Plugins\Facepunch.Steamworks.Win64.dll</HintPath>
+    </Reference>
+    <Content Update="Plugins\.gitkeep">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <PackagePath>runtimes</PackagePath>
+    </Content>
+  </ItemGroup>
+</Project>
