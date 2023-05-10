@@ -3,7 +3,6 @@
         xmlns:vm="using:RavenM_Launcher.ViewModels"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:converters="clr-namespace:RavenM_Launcher.Converters"
         mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
         Width="800"
         Height="450"
@@ -19,7 +18,7 @@
     </Design.DataContext>
 
 	<Grid>
-		<StackPanel IsVisible="{Binding !Loaded}" Margin="0,20,0,0" HorizontalAlignment="Center">
+		<StackPanel IsVisible="{Binding !ConnectedToSteam}" Margin="0,20,0,0" Height="50" HorizontalAlignment="Center">
 			<TextBlock Text="Not connected to Steam! Open the Steam app, then close and rerun this app." />
 		</StackPanel>
 		<DataGrid Name="OpenLobbiesList"
@@ -49,40 +48,54 @@
 				<DataGridTextColumn Header="Version" Binding="{Binding RavenMVersion}" Width="70" />
 			</DataGrid.Columns>
 		</DataGrid>
-		<Grid VerticalAlignment="Bottom" Margin="20,0,10,0">
-			<Grid.ColumnDefinitions>
-				<ColumnDefinition Width="*" />
-				<ColumnDefinition Width="125" />
-				<ColumnDefinition Width="125" />
-				<ColumnDefinition Width="75" />
-			</Grid.ColumnDefinitions>
-			<TextBlock Grid.Column="0" VerticalAlignment="Top" Text="{Binding LobbyCountText, Mode=OneWay}" />
-			<Button Grid.Column="1" x:Name="Joinlobby" Content="Join Lobby"
-		        Command="{Binding OnJoinLobby}"
-		        Margin="10,0,10,10" 
-		        HorizontalAlignment="Right" 
-		        HorizontalContentAlignment="Center" 
-		        VerticalContentAlignment="Center" 
-		        VerticalAlignment="Top" 
-		        IsEnabled="{Binding LobbySelected}"
-		        Width="125"/>
-			<Button Grid.Column="2" x:Name="Startravenfield" Content="Start Ravenfield"
-	            Command="{Binding OnStartRavenfield}"
-	            Margin="10,0,10,10" 
-	            HorizontalAlignment="Right" 
-	            HorizontalContentAlignment="Center" 
-	            VerticalContentAlignment="Center" 
-	            VerticalAlignment="Top" 
-	            Width="125"/>
-			<Button Grid.Column="3" x:Name="refreshbtn" Content="Refresh"
-		        Command="{Binding OnRefreshLobbies}"
-		        Margin="10,0,10,10" 
-		        HorizontalAlignment="Right" 
-		        HorizontalContentAlignment="Center" 
-		        VerticalContentAlignment="Center" 
-		        VerticalAlignment="Top" 
-		        Width="75" />
-		</Grid>
+		<StackPanel VerticalAlignment="Bottom">
+			<TextBlock HorizontalAlignment="Right" 
+			           FontSize="10"
+			           VerticalAlignment="Top"
+			           TextAlignment="Right"
+			           Height="20"
+			           Text="Auto-refreshes every 30 seconds"
+			           Margin="0,0,20,0"/>
+			<Grid VerticalAlignment="Bottom" Margin="20,0,10,0">
+				<Grid.ColumnDefinitions>
+					<ColumnDefinition Width="*" />
+					<ColumnDefinition Width="125" />
+					<ColumnDefinition Width="125" />
+					<ColumnDefinition Width="75" />
+				</Grid.ColumnDefinitions>
+				<Grid.RowDefinitions>
+					<RowDefinition Height="auto" />
+					<RowDefinition Height="auto" />
+				</Grid.RowDefinitions>
+				<TextBlock Grid.Row="0" Grid.Column="0" VerticalAlignment="Top" Text="{Binding LobbyCountText, Mode=OneWay}" />
+				<Button Grid.Row="0" Grid.Column="1" x:Name="Joinlobby" Content="Join Lobby"
+				        Command="{Binding OnJoinLobby}"
+				        Margin="10,0,10,10" 
+				        HorizontalAlignment="Right" 
+				        HorizontalContentAlignment="Center" 
+				        VerticalContentAlignment="Center" 
+				        VerticalAlignment="Top" 
+				        IsEnabled="{Binding LobbySelected}"
+				        Width="125"/>
+				<Button Grid.Row="0" Grid.Column="2" x:Name="Startravenfield" Content="Start Ravenfield"
+				        Command="{Binding OnStartRavenfield}"
+				        Margin="10,0,10,10" 
+				        HorizontalAlignment="Right" 
+				        HorizontalContentAlignment="Center" 
+				        VerticalContentAlignment="Center" 
+				        VerticalAlignment="Top" 
+				        Width="125"/>
+				<Button Grid.Row="0" Grid.Column="3" x:Name="refreshbtn" Content="Refresh"
+				        IsEnabled="{Binding ConnectedToSteam}"
+				        Command="{Binding OnRefreshLobbies}"
+				        Margin="10,0,10,10" 
+				        HorizontalAlignment="Right" 
+				        HorizontalContentAlignment="Center" 
+				        VerticalContentAlignment="Center" 
+				        VerticalAlignment="Top" 
+				        Width="75" />
+			</Grid>
+		</StackPanel>
 	</Grid>
 
 </Window>

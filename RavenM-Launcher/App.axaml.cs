@@ -9,7 +9,7 @@ namespace RavenM_Launcher
 {
     public partial class App : Application
     {
-        public static bool steamInitialised = false;
+        public static bool ConnectedToSteam = false;
         public override void Initialize()
         {
             AvaloniaXamlLoader.Load(this);
@@ -17,14 +17,14 @@ namespace RavenM_Launcher
             try
             {
                 Steamworks.SteamClient.Init(636480, true);
-                steamInitialised = true;
+                ConnectedToSteam = true;
             }
             catch (System.Exception e)
             {
                 // Something went wrong! Steam is closed?
                 var messageBox =
                     MessageBox.Avalonia.MessageBoxManager.GetMessageBoxStandardWindow("Error",
-                        $"Error when connecting to Steam: {e.Message}");
+                        $"Error when connecting to Steam:\n{e.Message}");
                 messageBox.Show();
             }
         }

@@ -1,9 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
-using System.Windows.Input;
+using System.Timers;
+using Avalonia.Controls;
+using Avalonia.Controls.ApplicationLifetimes;
+using MessageBox.Avalonia.DTO;
+using MessageBox.Avalonia.Enums;
+using RavenM_Launcher.Views;
 using ReactiveUI;
 using Steamworks;
 using Steamworks.Data;
@@ -12,7 +18,7 @@ namespace RavenM_Launcher.ViewModels
 {
     public class MainWindowViewModel : ViewModelBase
     {
-        public bool Loaded => App.steamInitialised;
+        public bool ConnectedToSteam => App.ConnectedToSteam;
 
         private string _lobbyCountText;
         public string LobbyCountText
@@ -55,6 +61,17 @@ namespace RavenM_Launcher.ViewModels
             { "bb3ef199-df63-4e99-a8a1-89a27d9e2fcb", "Dev" }
         };
 
+        private Timer autoRefresh
+        {
+            get;
+            set;
+        }
+
+        private void autoRefresh_Tick(object sender, EventArgs e)
+        {
+            OnRefreshLobbies();
+        }
+        
         private void ClearLobbies()
         {
             if (Lobbies != null)
@@ -81,6 +98,19 @@ namespace RavenM_Launcher.ViewModels
             return await SteamMatchmaking.LobbyList.RequestAsync();
         }
 
+        /// <summary>
+        /// Refreshes the hostname after some time since RequestUserInfo
+        /// may not always return user information immediately.
+        /// </summary>
+        /// <param name="index">Index in Lobbies list</param>
+        private async void RefreshHostname(int index, ulong steamid)
+        {
+            var lobbyItem = Lobbies.ElementAt(index);
+            await Task.Delay(TimeSpan.FromSeconds(1));
+            var steamuser = new Friend(steamid);
+            lobbyItem.GetType().GetProperty("HostName").SetValue(Lobbies, steamuser.Name);
+        }
+        
         private async Task<bool> GetLobbies()
         {
             try
@@ -89,8 +119,6 @@ namespace RavenM_Launcher.ViewModels
                 
                 if (requestedLobbies != null)
                 {
-                    Debug.WriteLine(requestedLobbies);
-
                     Lobbies = new List<object>();
                     
                     foreach (var item in requestedLobbies.Select((value, i) => new { i, value }))
@@ -104,8 +132,8 @@ namespace RavenM_Launcher.ViewModels
                             bool gettingOwner = SteamFriends.RequestUserInformation(ulong.Parse(lobby.GetData("owner")), true);
                             Friend owner = new Friend(ulong.Parse(lobby.GetData("owner")));
                             string hotjoin = lobby.GetData("hotjoin") != string.Empty ? "Yes" : "No";
-                            
                             string ravenMversion;
+                            
                             if (!RavenMVersionBuildIds.TryGetValue(lobby.GetData("build_id"), out ravenMversion))
                             {
                                 ravenMversion = "N/A";
@@ -120,21 +148,34 @@ namespace RavenM_Launcher.ViewModels
                                 ModCount = modList != string.Empty ? modList.Split(',').Length : 0,
                                 MidjoinEnabled = hotjoin,
                                 RavenMVersion = ravenMversion,
-                                IndexInLobbies = item.i
+                                SelectedIndexInLobbies = item.i
                             });
+                            
+                            if (gettingOwner)
+                            {
+                                RefreshHostname(item.i, ulong.Parse(lobby.GetData("owner")));
+                            }
                         }
 
                     }
-                    Debug.WriteLine(Lobbies);
                     SetLobbyCountText(Lobbies);
                 }
             }
             catch (Exception e)
             {
                 var messageBox =
-                    MessageBox.Avalonia.MessageBoxManager.GetMessageBoxStandardWindow("Error",
-                        $"Error when fetching multiplayer lobbies: {e.Message}");
-                await messageBox.Show();
+                    MessageBox.Avalonia.MessageBoxManager.GetMessageBoxStandardWindow(new MessageBoxStandardParams
+                        {
+                            ButtonDefinitions = ButtonEnum.Ok,
+                            ContentTitle = "Error",
+                            ContentMessage = $"Error when fetching multiplayer lobbies:\n{e.Message}",
+                            Icon = Icon.Error,
+                        }
+                    );
+                if (Avalonia.Application.Current.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
+                {
+                    await messageBox.ShowDialog(desktop.MainWindow);
+                }
             }
 
             return true;
@@ -147,8 +188,11 @@ namespace RavenM_Launcher.ViewModels
 
         public void OnRefreshLobbies()
         {
-            ClearLobbies();
-            FindLobbies();
+            if (ConnectedToSteam)
+            {
+                ClearLobbies();
+                FindLobbies();
+            }
         }
 
         private static void CloseCurrentProcess()
@@ -172,14 +216,14 @@ namespace RavenM_Launcher.ViewModels
             if (Lobbies != null)
             {
                 object lobby = Lobbies.ElementAt(LobbySelectedIndex);
-                var lobbyIndex = lobby.GetType().GetProperty("IndexInLobbies")?.GetValue(lobby, null).ToString();
+                var lobbyIndex = lobby.GetType().GetProperty("SelectedIndexInLobbies")?.GetValue(lobby, null).ToString();
                 
                 if (lobbyIndex != null)
                 {
                     Lobby[] requestedLobbies = await SteamMatchmaking.LobbyList.RequestAsync();
                     Lobby lobbyObj = requestedLobbies.ElementAt(Int32.Parse(lobbyIndex));
-
-                    await SteamMatchmaking.JoinLobbyAsync(lobbyObj.Id);
+                    
+                    SteamClient.Shutdown();
                     StartRavenfield($"-ravenm-lobby {lobbyObj.Id}");
                     CloseCurrentProcess();
                 }
@@ -195,7 +239,22 @@ namespace RavenM_Launcher.ViewModels
         
         public MainWindowViewModel()
         {
-            FindLobbies();
+            if (ConnectedToSteam)
+            {
+                FindLobbies();
+                BackgroundWorker bw = new BackgroundWorker();
+                bw.DoWork += (sender, e) =>
+                {
+                    BackgroundWorker worker = (BackgroundWorker)sender;
+                    while (!worker.CancellationPending)
+                    {
+                        OnRefreshLobbies();
+                        System.Threading.Thread.Sleep(30000); // 30 seconds
+                    }
+                };
+                bw.RunWorkerCompleted += (sender, e) => { };
+                bw.RunWorkerAsync();
+            }
         }
     }
 }
