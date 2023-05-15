@@ -5,10 +5,13 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Timers;
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
+using Avalonia.Platform;
 using MessageBox.Avalonia.DTO;
 using MessageBox.Avalonia.Enums;
+using RavenM_Launcher.Models;
 using RavenM_Launcher.Views;
 using ReactiveUI;
 using Steamworks;
@@ -27,8 +30,8 @@ namespace RavenM_Launcher.ViewModels
             set => this.RaiseAndSetIfChanged(ref _lobbyCountText, value);
         }
         
-        private List<object>? _openLobbies;
-        public List<object>? Lobbies
+        private List<LobbyListItem>? _openLobbies;
+        public List<LobbyListItem>? Lobbies
         {
             get => _openLobbies;
             set => this.RaiseAndSetIfChanged(ref _openLobbies, value);
@@ -88,7 +91,7 @@ namespace RavenM_Launcher.ViewModels
             LobbySelected = isSelected;
         }
         
-        private void SetLobbyCountText(List<object> lobbies)
+        private void SetLobbyCountText(List<LobbyListItem> lobbies)
         {
             LobbyCountText = $"Found {lobbies.Count} {(lobbies.Count == 1 ? "lobby" : "lobbies")}";
         }
@@ -108,7 +111,7 @@ namespace RavenM_Launcher.ViewModels
             var lobbyItem = Lobbies.ElementAt(index);
             await Task.Delay(TimeSpan.FromSeconds(1));
             var steamuser = new Friend(steamid);
-            lobbyItem.GetType().GetProperty("HostName").SetValue(Lobbies, steamuser.Name);
+            lobbyItem.HostName = steamuser.Name;
         }
         
         private async Task<bool> GetLobbies()
@@ -119,7 +122,7 @@ namespace RavenM_Launcher.ViewModels
                 
                 if (requestedLobbies != null)
                 {
-                    Lobbies = new List<object>();
+                    Lobbies = new List<LobbyListItem>();
                     
                     foreach (var item in requestedLobbies.Select((value, i) => new { i, value }))
                     {
@@ -139,18 +142,17 @@ namespace RavenM_Launcher.ViewModels
                                 ravenMversion = "N/A";
                             }
                             
-                            Lobbies.Add(new
-                            {
-                                HostName = owner.Name,
-                                Map = lobby.GetData("customMap") == "" ? "Built-in Map" : lobby.GetData("customMap"),
-                                MemberCount = lobby.MemberCount,
-                                MaxMembers = lobby.MaxMembers,
-                                ModCount = modList != string.Empty ? modList.Split(',').Length : 0,
-                                MidjoinEnabled = hotjoin,
-                                RavenMVersion = ravenMversion,
-                                SelectedIndexInLobbies = item.i
-                            });
-                            
+                            Lobbies.Add(new LobbyListItem(
+                                hostName: owner.Name,
+                                map: lobby.GetData("customMap") == "" ? "Built-in Map" : lobby.GetData("customMap"),
+                                memberCount: lobby.MemberCount,
+                                maxMembers: lobby.MaxMembers,
+                                modCount: modList != string.Empty ? modList.Split(',').Length : 0,
+                                midjoinEnabled: hotjoin,
+                                ravenMVersion: ravenMversion,
+                                selectedIndexInLobbies: item.i
+                            ));
+
                             if (gettingOwner)
                             {
                                 RefreshHostname(item.i, ulong.Parse(lobby.GetData("owner")));
@@ -195,11 +197,23 @@ namespace RavenM_Launcher.ViewModels
             }
         }
 
-        private static void CloseCurrentProcess()
+        private static async void CloseCurrentProcess()
         {
             int currentProcessId = Process.GetCurrentProcess().Id;
             Process currentProcess = Process.GetProcessById(currentProcessId);
-            currentProcess.CloseMainWindow();
+
+            if (AvaloniaLocator.Current.GetService<IRuntimePlatform>().GetRuntimeInfo().OperatingSystem !=
+                OperatingSystemType.WinNT)
+            {
+                await Task.Delay(TimeSpan.FromSeconds(1));
+                currentProcess.Kill();
+            }
+            else
+            {
+                // CloseMainWindow is only supported on Windows as of .NET6
+                currentProcess.CloseMainWindow();
+            }
+            
         }
 
         private static void StartRavenfield(string args = "")
