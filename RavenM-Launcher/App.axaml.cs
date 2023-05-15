@@ -16,7 +16,7 @@ namespace RavenM_Launcher
 
             try
             {
-                Steamworks.SteamClient.Init(636480);
+                Steamworks.SteamClient.Init(636480, true);
                 ConnectedToSteam = true;
             }
             catch (System.Exception e)

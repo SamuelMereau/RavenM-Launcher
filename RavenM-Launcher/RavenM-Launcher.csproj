@@ -3,28 +3,28 @@
     <OutputType>WinExe</OutputType>
     <TargetFramework>net6.0</TargetFramework>
 	  
-    <RuntimeIdentifiers>osx-x64</RuntimeIdentifiers>
-
-<!--	<RuntimeIdentifier Condition=" '$(Configuration)' == 'Release' ">win-x64</RuntimeIdentifier>-->
-<!--	<PublishSingleFile Condition=" '$(Configuration)' == 'Release' ">true</PublishSingleFile>-->
-<!--    <SelfContained Condition=" '$(Configuration)' == 'Release' ">true</SelfContained>-->
-<!--	<DebugType Condition=" '$(Configuration)' == 'Release' ">embedded</DebugType>-->
+    <RuntimeIdentifiers Condition=" '$(Configuration)' == 'Release' And '$(OS)' == 'Unix' ">osx-x64</RuntimeIdentifiers>
+	
+<!--    <RuntimeIdentifier Condition=" '$(Configuration)' == 'Release' And '$(OS)' == 'Windows_NT' ">win-x64</RuntimeIdentifier>-->
+<!--	<PublishSingleFile Condition=" '$(Configuration)' == 'Release' And '$(OS)' == 'Windows_NT' ">true</PublishSingleFile>-->
+<!--    <SelfContained Condition=" '$(Configuration)' == 'Release' And '$(OS)' == 'Windows_NT' ">true</SelfContained>-->
+<!--	<DebugType Condition=" '$(Configuration)' == 'Release' And '$(OS)' == 'Windows_NT' ">embedded</DebugType>-->
 	  
     <Nullable>enable</Nullable>
     <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <PublishReadyToRun>true</PublishReadyToRun>
     <IncludeAllContentForSelfExtract>true</IncludeAllContentForSelfExtract>
-    <PublishTrimmed>true</PublishTrimmed>
-    <PublishSingleFile>true</PublishSingleFile>
+    <PublishTrimmed Condition=" '$(Configuration)' == 'Release' ">true</PublishTrimmed>
+    <PublishSingleFile Condition=" '$(OS)' == 'Unix' Or '$(OS)' == 'Linux' ">true</PublishSingleFile>
   </PropertyGroup>
 
-  <PropertyGroup>
+  <PropertyGroup Condition=" '$(OS)' == 'Unix' ">
     <UseAppHost>true</UseAppHost>
   </PropertyGroup>
 
-  <PropertyGroup>
-    <CFBundleName>RavenMLauncher</CFBundleName> <!-- Also defines .app file name -->
+  <PropertyGroup Condition=" '$(OS)' == 'Unix' ">
+    <CFBundleName>RavenM Lobbies</CFBundleName> <!-- Also defines .app file name -->
     <CFBundleDisplayName>RavenM Lobbies</CFBundleDisplayName>
     <CFBundleIdentifier>com.ravenm</CFBundleIdentifier>
     <CFBundleVersion>1.0.0</CFBundleVersion>
@@ -56,7 +56,7 @@
     <PackageReference Include="Avalonia.ReactiveUI" Version="0.10.18" />
     <PackageReference Include="MessageBox.Avalonia" Version="2.1.0" />
     <PackageReference Include="XamlNameReferenceGenerator" Version="1.5.1" />
-    <PackageReference Include="Dotnet.Bundle" Version="*" />
+    <PackageReference Condition=" '$(OS)' == 'Unix' " Include="Dotnet.Bundle" Version="*" />
   </ItemGroup>
 
   
