@@ -57,7 +57,7 @@ namespace RavenM_Launcher.ViewModels
         public Dictionary<string, string> RavenMVersionBuildIds = new Dictionary<string, string>()
         {
             { "cffd5580-bfbc-438d-9f43-b36f71a9221b", "0.3" },
-            { "41a44c4a-f41f-48c2-b29b-9fb53f65f043", "0.4" },
+            { "41a44c4a-f4f1-48c2-b29b-9fb53f65f043", "0.4" },
             { "bb3ef199-df63-4e99-a8a1-89a27d9e2fcb", "Dev" }
         };
 
