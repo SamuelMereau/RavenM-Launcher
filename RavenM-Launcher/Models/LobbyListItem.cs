@@ -22,7 +22,10 @@ public class LobbyListItem
         get => _memberCount;
         set => _memberCount = value;
     }
-    
+
+    private string _memberCountDisplay => $"{MemberCount} / {MaxMembers}";
+    public string MemberCountDisplay => _memberCountDisplay;
+
     private int _maxMembers;
     public int MaxMembers
     {
@@ -58,7 +61,16 @@ public class LobbyListItem
         set => _selectedIndexInLobbies = value;
     }
 
+    private ulong _lobbyId;
+
+    public ulong LobbyId
+    {
+        get => _lobbyId;
+        set => _lobbyId = value;
+    }
+
     public LobbyListItem (
+        ulong lobbyId,
         string hostName, 
         string map, 
         int memberCount, 
@@ -68,6 +80,7 @@ public class LobbyListItem
         string ravenMVersion, 
         int selectedIndexInLobbies)
     {
+        _lobbyId = lobbyId;
         _hostName = hostName;
         _map = map;
         _memberCount = memberCount;

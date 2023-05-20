@@ -18,8 +18,11 @@
     </Design.DataContext>
 
 	<Grid>
-		<StackPanel IsVisible="{Binding !ConnectedToSteam}" Margin="0,20,0,0" Height="50" HorizontalAlignment="Center">
-			<TextBlock Text="Not connected to Steam! Open the Steam app, then close and rerun this app." />
+		<StackPanel Margin="0,20,0,0" Height="50" HorizontalAlignment="Center">
+			<TextBlock IsVisible="{Binding !ConnectedToSteam}" Text="Not connected to Steam! Open the Steam app, then close and rerun this app." />
+		</StackPanel>
+		<StackPanel IsVisible="{Binding ConnectedToSteam}" Margin="0,20,0,0" Height="50" HorizontalAlignment="Center">
+			<TextBlock IsVisible="{Binding LobbiesFound}" Text="No lobbies found. Start Ravenfield and host a lobby!" />
 		</StackPanel>
 		<DataGrid Name="OpenLobbiesList"
 		          Items="{Binding Lobbies, Mode=OneWay}" 
@@ -39,10 +42,10 @@
 				</Style>
 			</DataGrid.Styles>
 			<DataGrid.Columns>
-				<DataGridTextColumn Header="Host Name" Binding="{Binding HostName}" Width="150" />   
+				<DataGridTextColumn Header="Host Name" Binding="{Binding HostName}" Width="200" />   
 				<DataGridTextColumn Header="Map" Binding="{Binding Map}" Width="*" />  
-				<DataGridTextColumn Header="Members" Binding="{Binding MemberCount}" Width="80" />
-				<DataGridTextColumn Header="Max" Binding="{Binding MaxMembers}" Width="80" />
+				<DataGridTextColumn Header="Members" Binding="{Binding MemberCountDisplay}" Width="80" />
+				<!-- <DataGridTextColumn Header="Max" Binding="{Binding MaxMembers}" Width="80" /> -->
 				<DataGridTextColumn Header="Mods" Binding="{Binding ModCount}" Width="70" />
 				<DataGridTextColumn Header="Midjoin" Binding="{Binding MidjoinEnabled}" Width="70" />
 				<DataGridTextColumn Header="Version" Binding="{Binding RavenMVersion}" Width="70" />

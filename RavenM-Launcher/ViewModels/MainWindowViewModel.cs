@@ -3,8 +3,8 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
-using System.Timers;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
@@ -16,6 +16,7 @@ using RavenM_Launcher.Views;
 using ReactiveUI;
 using Steamworks;
 using Steamworks.Data;
+using Timer = System.Timers.Timer;
 
 namespace RavenM_Launcher.ViewModels
 {
@@ -35,6 +36,18 @@ namespace RavenM_Launcher.ViewModels
         {
             get => _openLobbies;
             set => this.RaiseAndSetIfChanged(ref _openLobbies, value);
+        }
+
+        public bool LobbiesFound
+        {
+            get
+            {
+                if (Lobbies != null)
+                {
+                    return Lobbies.Count > 0;
+                }
+                return false;
+            }
         }
 
         private int _lobbySelectedIndex;
@@ -70,10 +83,10 @@ namespace RavenM_Launcher.ViewModels
             set;
         }
 
-        private void autoRefresh_Tick(object sender, EventArgs e)
-        {
-            OnRefreshLobbies();
-        }
+        // private void autoRefresh_Tick(object sender, EventArgs e)
+        // {
+        //     OnRefreshLobbies();
+        // }
         
         private void ClearLobbies()
         {
@@ -108,10 +121,29 @@ namespace RavenM_Launcher.ViewModels
         /// <param name="index">Index in Lobbies list</param>
         private async void RefreshHostname(int index, ulong steamid)
         {
-            var lobbyItem = Lobbies.ElementAt(index);
-            await Task.Delay(TimeSpan.FromSeconds(1));
-            var steamuser = new Friend(steamid);
-            lobbyItem.HostName = steamuser.Name;
+            try
+            {
+                var lobbyItem = Lobbies.ElementAt(index);
+                await Task.Delay(TimeSpan.FromSeconds(1));
+                var steamuser = new Friend(steamid);
+                lobbyItem.HostName = steamuser.Name;
+            }
+            catch (Exception e)
+            {
+                var messageBox =
+                    MessageBox.Avalonia.MessageBoxManager.GetMessageBoxStandardWindow(new MessageBoxStandardParams
+                        {
+                            ButtonDefinitions = ButtonEnum.Ok,
+                            ContentTitle = "Error",
+                            ContentMessage = $"Error when refreshing lobbies:\n{e.Message}",
+                            Icon = Icon.Error,
+                        }
+                    );
+                if (Avalonia.Application.Current.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
+                {
+                    await messageBox.ShowDialog(desktop.MainWindow);
+                }
+            }
         }
         
         private async Task<bool> GetLobbies()
@@ -141,8 +173,9 @@ namespace RavenM_Launcher.ViewModels
                             {
                                 ravenMversion = "N/A";
                             }
-                            
+
                             Lobbies.Add(new LobbyListItem(
+                                lobbyId: lobby.Id,
                                 hostName: owner.Name,
                                 map: lobby.GetData("customMap") == "" ? "Built-in Map" : lobby.GetData("customMap"),
                                 memberCount: lobby.MemberCount,
@@ -197,15 +230,14 @@ namespace RavenM_Launcher.ViewModels
             }
         }
 
-        private static async void CloseCurrentProcess()
+        private static void CloseCurrentProcess()
         {
-            int currentProcessId = Process.GetCurrentProcess().Id;
-            Process currentProcess = Process.GetProcessById(currentProcessId);
+            var currentProcess = Process.GetCurrentProcess();
 
             if (AvaloniaLocator.Current.GetService<IRuntimePlatform>().GetRuntimeInfo().OperatingSystem !=
                 OperatingSystemType.WinNT)
             {
-                await Task.Delay(TimeSpan.FromSeconds(1));
+                Task.Delay(TimeSpan.FromSeconds(0.25));
                 currentProcess.Kill();
             }
             else
@@ -213,7 +245,6 @@ namespace RavenM_Launcher.ViewModels
                 // CloseMainWindow is only supported on Windows as of .NET6
                 currentProcess.CloseMainWindow();
             }
-            
         }
 
         private static void StartRavenfield(string args = "")
@@ -221,26 +252,18 @@ namespace RavenM_Launcher.ViewModels
             Process.Start(new ProcessStartInfo
             {
                 FileName = $@"steam://run/636480{(args != string.Empty ? $"//{args}" : "" )}",
-                UseShellExecute = true
+                UseShellExecute = true,
             });
+            CloseCurrentProcess();
         }
 
-        public async void OnJoinLobby()
+        public void OnJoinLobby()
         {
             if (Lobbies != null)
             {
-                object lobby = Lobbies.ElementAt(LobbySelectedIndex);
-                var lobbyIndex = lobby.GetType().GetProperty("SelectedIndexInLobbies")?.GetValue(lobby, null).ToString();
-                
-                if (lobbyIndex != null)
-                {
-                    Lobby[] requestedLobbies = await SteamMatchmaking.LobbyList.RequestAsync();
-                    Lobby lobbyObj = requestedLobbies.ElementAt(Int32.Parse(lobbyIndex));
-                    
-                    SteamClient.Shutdown();
-                    StartRavenfield($"-ravenm-lobby {lobbyObj.Id}");
-                    CloseCurrentProcess();
-                }
+                SteamClient.Shutdown();
+                LobbyListItem lobby = Lobbies.ElementAt(LobbySelectedIndex);
+                StartRavenfield($"-ravenm-lobby={lobby.LobbyId} -nocontentmods");
             }
         }
         
@@ -248,7 +271,6 @@ namespace RavenM_Launcher.ViewModels
         {
             SteamClient.Shutdown();
             StartRavenfield();
-            CloseCurrentProcess();
         }
         
         public MainWindowViewModel()
@@ -263,7 +285,7 @@ namespace RavenM_Launcher.ViewModels
                     while (!worker.CancellationPending)
                     {
                         OnRefreshLobbies();
-                        System.Threading.Thread.Sleep(30000); // 30 seconds
+                        Thread.Sleep(30000); // 30 seconds
                     }
                 };
                 bw.RunWorkerCompleted += (sender, e) => { };
