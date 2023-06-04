@@ -8,7 +8,7 @@
         Height="450"
         WindowStartupLocation="CenterScreen"
         x:Class="RavenM_Launcher.Views.MainWindow"
-        Icon="/Assets/avalonia-logo.ico"
+        Icon="/Assets/ravenm-logo.ico"
         Title="RavenM Lobbies">
 
     <Design.DataContext>
